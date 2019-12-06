@@ -22,7 +22,7 @@ api.get('/:reg', async (req, res) => {
 });
 
 //pass the register and the value to be added to the api
-api.post('/:reg', async (req, res) => {
+api.post('/:reg', bodyParser.text(), async (req, res) => {
   try {
     console.log(req.body);
     res.body = await db.post(req.params.reg, req.body);
