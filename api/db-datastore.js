@@ -1,7 +1,9 @@
 'use strict';
 
-//setup our datastore
-const datastore = require('@google-cloud/datastore');
+const {Datastore} = require('@google-cloud/datastore');
+
+// Creates a client
+const datastore = new Datastore();
 
 //setup the ey to find entries in datastore
 function key(reg) {
