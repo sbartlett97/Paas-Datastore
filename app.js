@@ -13,7 +13,7 @@ app.use('/api', require('./api'));
 app.use(express.static('static', { extensions: ['html'] }));
 
 //chose the deafult environmnet port (if configured) or use 3000
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 8080;
 
 //listen on our port
 app.listen(port);
