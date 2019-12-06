@@ -14,10 +14,10 @@ function key(reg) {
 //else add the number in body to it
 module.exports.post = async (reg, num) => { 
   let taskKey = key(reg);
-  console.log(num);
   const [data] = await datastore.get(taskKey);
+  console.log([data]);
   if (data && data.val) {
-    parseInt(num) += parseInt(data.val);
+    
     console.log(num);
     datastore.save({ key: taskKey, data: { name: reg, num } });
     return num;
