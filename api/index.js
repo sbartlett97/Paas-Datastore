@@ -45,7 +45,8 @@ api.put('/:reg', bodyParser.text(), async (req, res) => {
 //pass the register to be deleted to the api
 api.delete('/:reg', async (req, res) => {
   try {
-    res.send(await db.delete(req.params.reg));
+    await db.delete(req.params.reg);
+    res.sendStatus(204);
   } catch (e) {
     console.error(e);
     res.sendStatus(500);

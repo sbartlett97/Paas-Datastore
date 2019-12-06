@@ -1,7 +1,7 @@
 'use strict';
 
 //setup our datastore
-const {Datastore} = require('@google-cloud/datastore');
+const Datastore = require('@google-cloud/datastore');
 const datastore = new Datastore({namespace: 'paas'});
 
 //setup the ey to find entries in datastore
@@ -39,6 +39,7 @@ module.exports.put = (reg, num) => {
 //delete a register
 module.exports.delete = async (reg) => { 
   let taskKey = key(reg);
-  datastore.delete(taskKey);
+  let [data] = await datastore.get(taskKey);
+  if(data && data.val) datastore.delete(taskKey);
   return;
 };
