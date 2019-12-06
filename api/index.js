@@ -24,7 +24,6 @@ api.get('/:reg', async (req, res) => {
 //pass the register and the value to be added to the api
 api.post('/:reg', bodyParser.text(), async (req, res) => {
   try {
-    console.log(req.body);
     res.send(await db.post(req.params.reg, req.body));
   } catch (e) {
     console.error(e);
@@ -36,7 +35,7 @@ api.post('/:reg', bodyParser.text(), async (req, res) => {
 api.put('/:reg', bodyParser.text(), async (req, res) => {
   try {
     await db.put(req.params.reg, req.body);
-    res.sendStatus(204);
+    res.send(req.body).status(204);
   } catch (e) {
     console.error(e);
     res.sendStatus(500);
