@@ -1,0 +1,318 @@
+<!doctype html>
+<title>CLOCOSS sign-off 1: API with datastore</title>
+<style>
+body {
+  color: black;
+  background-color: white;
+}
+
+input:invalid {
+  box-shadow: 0 0 4px 1px red;
+}
+
+.errormessage {
+  display: none;
+  padding: .2em .7em;
+  border-radius: .3em;
+  font-size: 75%;
+  color: #800;
+  background-color: #eee;
+  line-height: 1rem;
+  margin-left: 1em;
+}
+
+input:invalid ~ .errormessage {
+  display: block;
+}
+
+.samewidth {
+  display: inline-block;
+  width: 15em;
+}
+
+.counter_newval {
+  width: 7ch;
+}
+
+.the_url {
+  width: 20em;
+}
+
+code {
+  background: #fff7e5;
+  padding: .2em .5em;
+  border-radius: .2em;
+  white-space: pre;
+}
+
+.note {
+  display: block;
+  margin: .5em 0;
+  font-size: 80%;
+}
+.hidden { display: none; }
+
+#run_btn { font-weight: bold; }
+
+#automatic { margin-top: 2em; border-top: 1px solid black; padding-top: 1em; }
+
+#automatic pre {
+  border: 1px solid #aaa;
+  border-radius: .3em;
+  background: #eee;
+  padding: 1em;
+}
+</style>
+
+<h1>CLOCOSS sign-off 1: API with datastore</h1>
+
+<section id="url_override" class="hidden">
+  <p >Testing server:
+    <input type="url" id="the_url" class="the_url">
+  <p class=note>E.g. <code>http://35.195.138.72:8080</code> — <strong>should not</strong> contain a trailing <code>/</code>!
+  <p class=note>To allow requests from other domains, you need to enable <em>CORS</em>; in Express.js, add this into the API, before the other routes:
+      <code class="multiline">api.use((req, res, next) => {
+  res.set('Access-Control-Allow-Origin', '*');
+  res.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
+  next();
+});</code>
+</section>
+
+<section id="url_override_trigger">
+  <button>Set custom URL</button><small> — only if this page doesn't come from your server</small>
+</section>
+
+<p>Add counter:
+  <input autofocus id="add_name" title="only accepts digits and letters a-z"
+    pattern="[a-zA-Z0-9_]+" placeholder="enter name">
+  <button id="add_btn">add</button>
+  <span class="errormessage">only use digits and letters please</span>
+</p>
+
+<template id="counter_t">
+  <p class="counter">
+    <span class="samewidth">
+      Counter <span class="counter_name">error</span>: <span class="counter_value">error</span>
+    </span>
+    <input type="number" class="counter_newval">
+    <button class="add">add</button>
+    <button class="set">set</button>
+    <button class="delete">delete</button>
+    <button class="refresh">refresh</button>
+  </p>
+</template>
+
+<section id="automatic">
+  <button id="run_btn">run automatic tests now</button>
+
+  <pre id=result>testing log will show here</pre>
+</section>
+
+
+
+<script>
+// included here so the whole testing page is one file
+'use strict';
+
+window.addEventListener('load', init);
+
+function init() {
+  window.add_btn.addEventListener('click', addCounterToPage);
+  window.run_btn.addEventListener('click', runTests);
+  window.url_override_trigger.querySelector('button').addEventListener('click', unhideUrlOverride);
+
+  let theUrl = window.location.protocol + '//' + window.location.hostname;
+  if (window.location.port) theUrl += ':' + window.location.port;
+  window.the_url.value = theUrl;
+}
+
+function unhideUrlOverride() {
+  window.url_override.classList.remove('hidden');
+  window.url_override_trigger.classList.add('hidden');
+  window.url_override.querySelector('input').focus();
+}
+
+function addCounterToPage() {
+  if (!window.add_name.validity.valid || window.add_name.value.trim() === '') {
+    window.add_name.focus();
+    return;
+  }
+
+  const name = window.add_name.value;
+  // check if the name is already there, if so, only refresh that counter
+  for (const ctr of document.querySelectorAll('.counter')) {
+    if (ctr.querySelector('.counter_name').textContent.trim() === name) {
+      ctr.querySelector('button.refresh').click();
+      return;
+    }
+  }
+
+  const template = document.querySelector('#counter_t');
+  const ctr = document.importNode(template.content, true).children[0];
+  ctr.querySelector('.counter_name').textContent = name;
+  ctr.querySelector('.counter_value').textContent = 'loading';
+  ctr.querySelector('input.counter_newval').value = 0;
+  ctr.querySelector('button.add').addEventListener('click', addToCounter);
+  ctr.querySelector('button.set').addEventListener('click', setCounter);
+  ctr.querySelector('button.refresh').addEventListener('click', refreshCounter);
+  ctr.querySelector('button.delete').addEventListener('click', deleteCounter);
+  template.parentElement.insertBefore(ctr, template);
+  ctr.querySelector('button.refresh').click();
+  ctr.querySelector('input.counter_newval').focus();
+}
+
+function findCounterElement(node) {
+  if (node == null || node.classList.contains('counter')) return node;
+
+  return findCounterElement(node.parentElement);
+}
+
+function url() {
+  return window.the_url.value;
+}
+
+async function addToCounter(ev) {
+  const ctr = findCounterElement(ev.target);
+  try {
+    ctr.querySelector('.counter_value').textContent = 'adding';
+    const name = ctr.querySelector('.counter_name').textContent;
+    const newval = ctr.querySelector('input.counter_newval').value;
+    const response = await fetch(url() + `/api/${encodeURIComponent(name)}`, { method: 'POST', body: newval });
+    if (response.ok) {
+      const text = await response.text();
+      ctr.querySelector('.counter_value').textContent = text;
+    } else {
+      ctr.querySelector('.counter_value').textContent = 'ERROR';
+      console.log(response);
+    }
+  } catch (e) {
+    ctr.querySelector('.counter_value').textContent = 'ERROR';
+    console.log(e);
+  }
+}
+
+async function setCounter(ev) {
+  const ctr = findCounterElement(ev.target);
+  try {
+    ctr.querySelector('.counter_value').textContent = 'setting';
+    const name = ctr.querySelector('.counter_name').textContent;
+    const newval = ctr.querySelector('input.counter_newval').value;
+    const response = await fetch(url() + `/api/${encodeURIComponent(name)}`, { method: 'PUT', body: newval });
+    if (response.ok) {
+      const text = await response.text();
+      ctr.querySelector('.counter_value').textContent = text;
+    } else {
+      ctr.querySelector('.counter_value').textContent = 'ERROR';
+      console.log(response);
+    }
+  } catch (e) {
+    ctr.querySelector('.counter_value').textContent = 'ERROR';
+    console.log(e);
+  }
+}
+
+async function refreshCounter(ev) {
+  const ctr = findCounterElement(ev.target);
+  try {
+    ctr.querySelector('input.counter_newval').focus();
+    ctr.querySelector('.counter_value').textContent = 'loading';
+    const name = ctr.querySelector('.counter_name').textContent;
+    const response = await fetch(url() + `/api/${encodeURIComponent(name)}`);
+    if (response.ok) {
+      const text = await response.text();
+      ctr.querySelector('.counter_value').textContent = text;
+    } else {
+      ctr.querySelector('.counter_value').textContent = 'ERROR';
+      console.log(response);
+    }
+  } catch (e) {
+    ctr.querySelector('.counter_value').textContent = 'ERROR';
+    console.log(e);
+  }
+}
+
+async function deleteCounter(ev) {
+  const ctr = findCounterElement(ev.target);
+  try {
+    ctr.querySelector('.counter_value').textContent = 'deleting';
+    const name = ctr.querySelector('.counter_name').textContent;
+    const response = await fetch(url() + `/api/${encodeURIComponent(name)}`, { method: 'DELETE' });
+    if (response.ok) {
+      ctr.remove();
+      window.add_name.focus();
+    } else {
+      ctr.querySelector('.counter_value').textContent = 'ERROR';
+      console.log(response);
+    }
+  } catch (e) {
+    ctr.querySelector('.counter_value').textContent = 'ERROR';
+    console.log(e);
+  }
+}
+
+
+// functions for automatic testing
+
+function log(msg) {
+  window.result.textContent += msg + '\n';
+}
+
+log.clear = () => {
+  window.result.textContent = '';
+};
+
+const TEXT = 'text/plain';
+
+async function test(method, path, content, contentType, expStatus, expContent) {
+  const logContent = content!=null ? '"' + content + '"' : '';
+  const logExpContent = expContent!=null ? `should get "${expContent}"` : '';
+  log(`test: ${method} ${path} ${logContent} ${logExpContent}`);
+
+  const headers = new Headers();
+  const fetchOpts = { method, headers };
+  if (content != null) {
+    headers.append('Content-type', contentType);
+    fetchOpts.body = content;
+  }
+  const response = await fetch(url() + path, fetchOpts);
+  let pass = true;
+  if (expStatus != null && response.status !== expStatus) {
+    pass = false;
+    log(`  expected status ${expStatus}, got ${response.status}`);
+  }
+  const text = await response.text();
+  if (expContent != null && text !== expContent) {
+    pass = false;
+    log(`  expected content "${expContent}", got "${text}"`);
+  }
+  if (pass) log('  ok');
+  return pass;
+}
+
+async function runTests() {
+  log.clear();
+  let all = true;
+  try {
+    all = all && await test('DELETE', '/api/jack', null, null, 204);
+    all = all && await test('DELETE', '/api/foo', null, null, 204);
+    all = all && await test('GET', '/api/jack', null, null, 200, '0');
+    all = all && await test('POST', '/api/jack', '32', TEXT, 200, '32');
+    all = all && await test('POST', '/api/jack', '4', TEXT, 200, '36');
+    all = all && await test('GET', '/api/jack', null, null, 200, '36');
+    all = all && await test('GET', '/api/foo', null, null, 200, '0');
+    all = all && await test('POST', '/api/foo', '4', TEXT, 200, '4');
+    all = all && await test('GET', '/api/foo', null, null, 200, '4');
+    all = all && await test('PUT', '/api/jack', '0', TEXT, 200, '0');
+    all = all && await test('GET', '/api/jack', null, null, 200, '0');
+    all = all && await test('GET', '/api/foo', null, null, 200, '4');
+    all = all && await test('DELETE', '/api/foo', null, null, 204, null);
+    all = all && await test('POST', '/api/foo', '7', TEXT, 200, '7');
+    all = all && await test('GET', '/api/foo', null, null, 200, '7');
+  } catch (e) {
+    all = false;
+    log(`error ${e}\n  for details see browser console`);
+    console.error(e);
+  }
+  log(all ? 'all OK' : 'stopping on first failure');
+}
+</script>
