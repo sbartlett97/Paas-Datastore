@@ -1,8 +1,10 @@
 'use strict';
 
-// todo: the namespace should be in a config file
+//setup our datastore
 const {Datastore} = require('@google-cloud/datastore');
-const datastore = new Datastore();
+const datastore = new Datastore({namespace: 'paas'});
+
+//setup the ey to find entries in datastore
 function key(reg) {
   return datastore.key(['Register', reg]);
 }
