@@ -15,10 +15,9 @@ function key(reg) {
 module.exports.post = async (reg, num) => { 
   let taskKey = key(reg);
   const [data] = await datastore.get(taskKey);
-  console.log([data]);
-  if (data && data.val) {
-    
-    console.log(num);
+  if (data && data.num) {
+
+    parseInt(num) += parseInt(data.num);
     datastore.save({ key: taskKey, data: { name: reg, num } });
     return num;
   }else{
