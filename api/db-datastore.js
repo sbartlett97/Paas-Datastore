@@ -1,6 +1,6 @@
 'use strict';
 
-const {Datastore} = require('@google-cloud/datastore')({namespace: "paas"});
+const {Datastore} = require('@google-cloud/datastore');
 
 // Creates a client
 const datastore = new Datastore();
