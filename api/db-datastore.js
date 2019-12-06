@@ -1,7 +1,7 @@
 'use strict';
 
 //setup our datastore
-const Datastore = require('@google-cloud/datastore');
+const {Datastore} = require('@google-cloud/datastore');
 const datastore = new Datastore({namespace: 'paas'});
 
 //setup the ey to find entries in datastore
