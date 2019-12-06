@@ -16,14 +16,11 @@ module.exports.post = async (reg, num) => {
   let taskKey = key(reg);
   const [data] = await datastore.get(taskKey);
   if (data && data.val) {
-
     num = parseInt(num)+parseInt(data.val);
-    console.log(num);
     datastore.save({ key: taskKey, data: { name: reg, val: num.toString() } });
     return num.toString();
   }else{
     datastore.save({ key: taskKey, data: { name: reg, val: num } });
-    console.log(num);
     return num;
   }
 };
