@@ -15,13 +15,13 @@ function key(reg) {
 module.exports.post = async (reg, num) => { 
   let taskKey = key(reg);
   const [data] = await datastore.get(taskKey);
-  if (data && data.num) {
+  if (data && data.val) {
 
-    parseInt(num) += parseInt(data.num);
-    datastore.save({ key: taskKey, data: { name: reg, num } });
+    parseInt(num) += parseInt(data.val);
+    datastore.save({ key: taskKey, data: { name: reg, val: num.toString() } });
     return num;
   }else{
-    datastore.save({ key: taskKey, data: { name: reg, num } });
+    datastore.save({ key: taskKey, data: { name: reg, val: num } });
     console.log(num);
     return num;
   }
@@ -36,7 +36,7 @@ module.exports.get = async (reg) => {
 
 //set the value of a register ot a number
 module.exports.put = (reg, num) => { 
-  return datastore.save({ key: key(reg), data: { name: reg, num } });
+  return datastore.save({ key: key(reg), data: { name: reg, val: num } });
 };
 
 //delete a register
