@@ -25,9 +25,7 @@ api.get('/:reg', async (req, res) => {
 api.post('/:reg', bodyParser.text(), async (req, res) => {
   try {
     console.log(req.body);
-    res.body = await db.post(req.params.reg, req.body);
-    console.log(res.body);
-    res.send();
+    res.send(await db.post(req.params.reg, req.body));
   } catch (e) {
     console.error(e);
     res.sendStatus(500);
