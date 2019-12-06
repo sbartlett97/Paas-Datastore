@@ -18,8 +18,9 @@ module.exports.post = async (reg, num) => {
   if (data && data.val) {
 
     num = parseInt(num)+parseInt(data.val);
+    console.log(num);
     datastore.save({ key: taskKey, data: { name: reg, val: num.toString() } });
-    return num;
+    return num.toString();
   }else{
     datastore.save({ key: taskKey, data: { name: reg, val: num } });
     console.log(num);
