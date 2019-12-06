@@ -1,6 +1,6 @@
 'use strict';
 
-const {Datastore} = require('@google-cloud/datastore');
+const {Datastore} = require('@google-cloud/datastore')({namespace: "paas"});
 
 // Creates a client
 const datastore = new Datastore();
@@ -13,13 +13,20 @@ function key(reg) {
 //if no register exists create a register and assign a number to it
 //else add the number in body to it
 module.exports.post = async (reg, num) => { 
+
+  //get the key of the entry we are looking for and search for thr record
   let taskKey = key(reg);
   const [data] = await datastore.get(taskKey);
+
+  //if we have a record and it has a value add the new value to it
   if (data && data.val) {
     num = parseInt(num)+parseInt(data.val);
+
+    //save the new value under the old register name and retunr the value
     datastore.save({ key: taskKey, data: { name: reg, val: num.toString() } });
     return num.toString();
   }else{
+    //it didn't previously exist so create a new register and add the value
     datastore.save({ key: taskKey, data: { name: reg, val: num } });
     return num;
   }
