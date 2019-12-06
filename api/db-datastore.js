@@ -1,8 +1,7 @@
 'use strict';
 
 //setup our datastore
-const ds = require('@google-cloud/datastore');
-const datastore = new ds({namespace: 'paas'});
+const datastore = require('@google-cloud/datastore')({ namespace: 'paas' });
 
 //setup the ey to find entries in datastore
 function key(reg) {
